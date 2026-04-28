@@ -63,11 +63,7 @@ async def main() -> None:
     config = load_config()
 
     # Initialize apscheduler
-    job_store = RedisJobStore(
-        host=config.redis.HOST,
-        port=config.redis.PORT,
-        db=config.redis.DB,
-    )
+    job_store = RedisJobStore(**config.redis.connection_dict)
     apscheduler = AsyncIOScheduler(
         jobstores={"default": job_store},
     )

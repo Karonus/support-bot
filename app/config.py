@@ -33,6 +33,8 @@ class RedisConfig:
     HOST: str
     PORT: int
     DB: int
+    USERNAME: str | None
+    PASSWORD: str | None
 
     def dsn(self) -> str:
         """
@@ -40,7 +42,29 @@ class RedisConfig:
 
         :return: The generated DSN.
         """
-        return f"redis://{self.HOST}:{self.PORT}/{self.DB}"
+        if self.PASSWORD:
+            return f"redis://{self.USERNAME or ''}:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.DB}"
+        else:
+            return f"redis://{self.HOST}:{self.PORT}/{self.DB}"
+
+    @property
+    def connection_dict(self) -> dict[str, str | int]:
+        """
+        Connection kwargs for Redis clients.
+        """
+
+        args = dict(
+            host=self.HOST,
+            port=self.PORT,
+            db=self.DB,
+        )
+
+        if self.USERNAME:
+            args["username"] = self.USERNAME
+        if self.PASSWORD:
+            args["password"] = self.PASSWORD
+
+        return args
 
 
 @dataclass
@@ -76,5 +100,7 @@ def load_config() -> Config:
             HOST=env.str("REDIS_HOST"),
             PORT=env.int("REDIS_PORT"),
             DB=env.int("REDIS_DB"),
+            USERNAME=env.str("REDIS_USERNAME", None),
+            PASSWORD=env.str("REDIS_PASSWORD", None),
         ),
     )
